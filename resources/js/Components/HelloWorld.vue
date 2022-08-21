@@ -7,7 +7,7 @@
             <button @click="add">add!</button>
         </div>
 
-        <canvas ref="testCanvas" id="test-canvas" class="cnv"></canvas>
+        <canvas ref="testCanvas" class="cnv"></canvas>
     </div>
 </template>
 
@@ -30,15 +30,13 @@ export default {
 
     mounted() {
 
-
-
         // サイズを指定
         const width = 960;
         const height = 540;
 
         // レンダラーを作成
         const renderer = new THREE.WebGLRenderer({
-          canvas: this.$refs.testCanvas, //document.querySelector('#test-canvas'),
+          canvas: this.$refs.testCanvas,
         });
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(width, height);
@@ -46,15 +44,28 @@ export default {
         // シーンを作成
         const scene = new THREE.Scene();
 
+        const light = new THREE.AmbientLight(0xFFFFFF, 1.0);
+        scene.add(light);
+
         // カメラを作成
         const camera = new THREE.PerspectiveCamera(45, width / height);
         camera.position.set(0, 0, +1000);
 
+        const loader = new THREE.TextureLoader();
+        const texture = loader.load('/kodomo.png');
+
         // 箱を作成
         const geometry = new THREE.BoxGeometry(400, 400, 400);
-        const material = new THREE.MeshNormalMaterial();
+        // const geometry = new THREE.SphereGeometry(300, 30, 30);
+        // const material = new THREE.MeshNormalMaterial();
+        // マテリアルにテクスチャーを設定
+        const material = new THREE.MeshStandardMaterial({
+            map: texture
+        });
+
         const box = new THREE.Mesh(geometry, material);
         scene.add(box);
+
 
         tick();
 
