@@ -2,17 +2,23 @@
     <div class="hello-box">
         <h1>やあ、世界！</h1>
         <div>hello world</div>
+
+        <canvas ref="testCanvas" class="cnv"></canvas>
+<!--
+
         <h2>カウンタ：{{ a }}</h2>
         <div>
             <button @click="add">add!</button>
         </div>
-
-        <canvas ref="testCanvas" class="cnv"></canvas>
+ -->
     </div>
 </template>
 
 <script>
 import * as THREE from 'three';
+import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+// console.log('ColladaLoader', ColladaLoader)
 
 export default {
     name: 'hello-world',
@@ -30,6 +36,10 @@ export default {
 
     mounted() {
 
+// console.log(THREE.Loader)
+console.log(new ColladaLoader())
+
+
         // サイズを指定
         const width = 960;
         const height = 540;
@@ -44,27 +54,41 @@ export default {
         // シーンを作成
         const scene = new THREE.Scene();
 
-        const light = new THREE.AmbientLight(0xFFFFFF, 1.0);
+        const light = new THREE.AmbientLight(0xFFFFFF, 0.2);
         scene.add(light);
+
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff);
+        directionalLight.position.set(1, 1, 1);
+        scene.add(directionalLight);
 
         // カメラを作成
         const camera = new THREE.PerspectiveCamera(45, width / height);
-        camera.position.set(0, 0, +1000);
+        camera.position.set(0, 0, 6.0);
 
-        const loader = new THREE.TextureLoader();
-        const texture = loader.load('/kodomo.png');
+        // const loader = new THREE.TextureLoader();
+        // const texture = loader.load('kodomo.png');
 
-        // 箱を作成
-        const geometry = new THREE.BoxGeometry(400, 400, 400);
-        // const geometry = new THREE.SphereGeometry(300, 30, 30);
-        // const material = new THREE.MeshNormalMaterial();
-        // マテリアルにテクスチャーを設定
-        const material = new THREE.MeshStandardMaterial({
-            map: texture
+        // const modelLoader = new ColladaLoader()
+        const modelLoader = new GLTFLoader()
+
+        let box = null
+        modelLoader.load('box.glb', (glb) => {
+            // 読み込み後に3D空間に追加
+            const model = glb.scene.children[0]
+            scene.add(model)
+            box = model
         });
 
-        const box = new THREE.Mesh(geometry, material);
-        scene.add(box);
+        // 箱を作成
+        // const geometry = new THREE.BoxGeometry(400, 400, 400);
+        // const material = new THREE.MeshNormalMaterial();
+        // マテリアルにテクスチャーを設定
+        // const material = new THREE.MeshStandardMaterial({
+        //     map: texture
+        // });
+        // const box = new THREE.Mesh(geometry, material);
+        // scene.add(box);
 
 
         tick();
@@ -72,10 +96,15 @@ export default {
         // 毎フレーム時に実行されるループイベントです
         function tick() {
 // console.log('a')
-          box.rotation.y += 0.01;
-          renderer.render(scene, camera); // レンダリング
+            if (box) {
+                box.rotation.y += 0.01;
+                box.position.set(0, 0, 0)
 
-          requestAnimationFrame(tick);
+            }
+
+            renderer.render(scene, camera); // レンダリング
+
+            requestAnimationFrame(tick);
         }
 
 
