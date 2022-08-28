@@ -1,24 +1,26 @@
 <template>
-    <div class="hello-box">
-        <h1>やあ、世界！</h1>
-        <div>hello world</div>
+    <div
+        ref="bg"
+        class="hello-bg"
+    >
 
-        <canvas ref="testCanvas" class="cnv"></canvas>
-<!--
+        <canvas
+            ref="testCanvas"
+            class="cnv">
+        </canvas>
 
-        <h2>カウンタ：{{ a }}</h2>
-        <div>
-            <button @click="add">add!</button>
+        <div class="hello-box">
+            <h1>やあ、世界！</h1>
+            <div>hello world</div>
         </div>
- -->
     </div>
+
 </template>
 
 <script>
 import * as THREE from 'three';
-import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
-// console.log('ColladaLoader', ColladaLoader)
+// import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader'
 
 export default {
     name: 'hello-world',
@@ -29,27 +31,43 @@ export default {
         },
     },
     methods: {
-        add() {
-            this.a++
+
+        onWindowResize() {
+
+
+        },
+
+        createRenderer(width, height) {
+            // レンダラーを作成
+            const renderer = new THREE.WebGLRenderer({
+            canvas: this.$refs.testCanvas,
+            //   antialias: true,
+            });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(width, height);
+
+            return renderer
+        },
+
+        createCamera(width, height) {
+            const camera = new THREE.PerspectiveCamera(45, width / height);
+            camera.position.set(0, 2.8, 6.0);
+            camera.lookAt(new THREE.Vector3(0, 1, 0));
+            // camera.lookAt(0, 0, 0)
+            return camera
         },
     },
 
     mounted() {
-
-// console.log(THREE.Loader)
-console.log(new ColladaLoader())
-
+        const r = this.$refs.bg.getBoundingClientRect()
+        // console.log(r)
 
         // サイズを指定
-        const width = 960;
-        const height = 540;
+        const width = r.width;
+        const height = r.height;
 
-        // レンダラーを作成
-        const renderer = new THREE.WebGLRenderer({
-          canvas: this.$refs.testCanvas,
-        });
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setSize(width, height);
+        this.renderer = this.createRenderer(width, height)
+
 
         // シーンを作成
         const scene = new THREE.Scene();
@@ -63,10 +81,8 @@ console.log(new ColladaLoader())
         scene.add(directionalLight);
 
         // カメラを作成
-        const camera = new THREE.PerspectiveCamera(45, width / height);
-        camera.position.set(0, 2.8, 6.0);
-        camera.lookAt(new THREE.Vector3(0, 1, 0));
-        // camera.lookAt(0, 0, 0)
+
+        this.camera = this.createCamera(width, height)
 
         // const loader = new THREE.TextureLoader();
         // const texture = loader.load('kodomo.png');
@@ -93,10 +109,9 @@ console.log(new ColladaLoader())
         // scene.add(box);
 
 
-        tick();
 
         // 毎フレーム時に実行されるループイベントです
-        function tick() {
+        const tick = () => {
 // console.log('a')
             if (box) {
                 box.rotation.y += 0.01;
@@ -104,10 +119,32 @@ console.log(new ColladaLoader())
 
             }
 
-            renderer.render(scene, camera); // レンダリング
+            this.renderer.render(scene, this.camera); // レンダリング
 
             requestAnimationFrame(tick);
         }
+
+        tick();
+
+        this.$nextTick(() => {
+
+            new ResizeObserver((e) => {
+                if (e.length) {
+                    const resizeState = e[0]
+                    const width = resizeState.contentRect.width;
+                    const height = resizeState.contentRect.height;
+
+                    this.renderer.setSize(width, height);
+
+                    // カメラのアスペクト比を正す
+                    this.camera.aspect = width / height;
+                    this.camera.updateProjectionMatrix();
+
+                }
+            }).observe(this.$refs.bg)
+
+
+        })
 
 
     },
@@ -118,25 +155,38 @@ console.log(new ColladaLoader())
         // const ambientlight = new THREE.AmbientLight(0xFFFFFF, 0.5)
 
         return {
-            a: this.startCount,
+            renderer: null,
+            camera: null,
         }
     },
 }
 </script>
 
 <style lang="scss" scoped>
-.hello-box {
-    position: relative;
-    margin: 20px;
-    padding: 10px;
-    border: 1px solid #101010;
-    border-radius: 10px;
+.hello {
+    &-bg {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+    &-box {
+        position: absolute;
+        top: 0px;
+        left: 0xp;
+
+        color: #ffffff;
+        // background: black;
+        margin: 20px;
+        padding: 10px;
+        // border: 1px solid #101010;
+        // border-radius: 10px;
+    }
 }
 
 .cnv {
     position: relative;
     width: 100%;
-    height: 540px;
+    height: 100%;
     border: 1px solid black;
 }
 </style>
