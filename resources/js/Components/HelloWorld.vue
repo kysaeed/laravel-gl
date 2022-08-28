@@ -64,7 +64,9 @@ console.log(new ColladaLoader())
 
         // カメラを作成
         const camera = new THREE.PerspectiveCamera(45, width / height);
-        camera.position.set(0, 0, 6.0);
+        camera.position.set(0, 2.8, 6.0);
+        camera.lookAt(new THREE.Vector3(0, 1, 0));
+        // camera.lookAt(0, 0, 0)
 
         // const loader = new THREE.TextureLoader();
         // const texture = loader.load('kodomo.png');
@@ -75,7 +77,7 @@ console.log(new ColladaLoader())
         let box = null
         modelLoader.load('box.glb', (glb) => {
             // 読み込み後に3D空間に追加
-            const model = glb.scene.children[0]
+            const model = glb.scene
             scene.add(model)
             box = model
         });
