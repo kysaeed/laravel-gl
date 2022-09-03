@@ -98,6 +98,31 @@ export default {
             box = model
         });
 
+
+        const spriteMaterial = new THREE.SpriteMaterial({
+            map: new THREE.TextureLoader().load('light.png'),
+            // opacity: 0.8,
+            fog: true,
+            // transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false, // デプスバッファへの書き込み可否
+        })
+
+        for (let i = 0; i < 1000; i++) {
+            const sprite = new THREE.Sprite(spriteMaterial)
+            sprite.position.x = 100 * (Math.random() - 0.5);
+            sprite.position.y = 100 * Math.random() - 40;
+            sprite.position.z = 100 * (Math.random() - 0.5);
+            this.sprites.push(sprite)
+            scene.add(sprite)
+        }
+
+        // 地面を作成
+        const plane = new THREE.GridHelper(300, 10, 0x888888, 0x888888);
+        plane.position.y = -40;
+        scene.add(plane);
+
+
         // 箱を作成
         // const geometry = new THREE.BoxGeometry(400, 400, 400);
         // const material = new THREE.MeshNormalMaterial();
@@ -119,7 +144,15 @@ export default {
 
             }
 
+            this.sprites.forEach((s) => {
+                s.position.y -= 0.1
+                if (s.position.y < -10.0) {
+                    s.position.y += 100.0
+                }
+            })
+
             this.renderer.render(scene, this.camera); // レンダリング
+
 
             requestAnimationFrame(tick);
         }
@@ -157,6 +190,7 @@ export default {
         return {
             renderer: null,
             camera: null,
+            sprites: [],
         }
     },
 }
