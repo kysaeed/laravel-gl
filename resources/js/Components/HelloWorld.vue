@@ -40,18 +40,19 @@ export default {
         createRenderer(width, height) {
             // レンダラーを作成
             const renderer = new THREE.WebGLRenderer({
-            canvas: this.$refs.testCanvas,
-            //   antialias: true,
+                canvas: this.$refs.testCanvas,
+                antialias: true,
             });
-            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true
+            renderer.setPixelRatio(window.devicePixelRatio)
             renderer.setSize(width, height);
 
             return renderer
         },
 
         createCamera(width, height) {
-            const camera = new THREE.PerspectiveCamera(45, width / height);
-            camera.position.set(0, 2.8, 6.0);
+            const camera = new THREE.PerspectiveCamera(45, width / height, 0.01, 100);
+            camera.position.set(0, 4.8, 10.0);
             camera.lookAt(new THREE.Vector3(0, 1, 0));
             // camera.lookAt(0, 0, 0)
             return camera
@@ -68,20 +69,28 @@ export default {
 
         this.renderer = this.createRenderer(width, height)
 
-
         // シーンを作成
         const scene = new THREE.Scene();
+        // scene.fog = new THREE.Fog(0x000000, 8, 22);
 
-        const light = new THREE.AmbientLight(0xFFFFFF, 0.2);
+        const light = new THREE.AmbientLight(0xFFFFFF, 0.3);
         scene.add(light);
 
+        // const directionalLight = new THREE.DirectionalLight(0xffffff);
+        // directionalLight.position.set(1, 2.0, 1);
+        // scene.add(directionalLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff);
-        directionalLight.position.set(1, 1, 1);
-        scene.add(directionalLight);
+        // new THREE.SpotLight(色, 光の強さ, 距離, 照射角, ボケ具合, 減衰率)
+        // const slight = new THREE.SpotLight(0xFFFFFF, 1, 1200, Math.PI / 4, 1);
+        const spotLight = new THREE.SpotLight(0xffffff, 0.8, 200, Math.PI / 4, 1);
+        spotLight.position.set(1, 7, 3)
+        spotLight.castShadow = true
+        spotLight.shadow.mapSize.width = 1024;
+        spotLight.shadow.mapSize.height = 1024;
+
+        scene.add(spotLight);
 
         // カメラを作成
-
         this.camera = this.createCamera(width, height)
 
         // const loader = new THREE.TextureLoader();
@@ -92,35 +101,60 @@ export default {
 
         let box = null
         modelLoader.load('box.glb', (glb) => {
-            // 読み込み後に3D空間に追加
+            // 読み込み後に3D空間に追加_
             const model = glb.scene
+            model.children[0].castShadow = true
+            // model.position.y = 10
+// console.log(model)
             scene.add(model)
             box = model
         });
 
 
-        const spriteMaterial = new THREE.SpriteMaterial({
-            map: new THREE.TextureLoader().load('light.png'),
-            // opacity: 0.8,
-            fog: true,
-            // transparent: true,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false, // デプスバッファへの書き込み可否
-        })
-
         for (let i = 0; i < 1000; i++) {
+            const spriteMaterial = new THREE.SpriteMaterial({
+                map: new THREE.TextureLoader().load('light.png'),
+                opacity: 0.7,
+                color: 0xffffff,
+                fog: true,
+                transparent: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false, // デプスバッファへの書き込み可否
+            })
+
             const sprite = new THREE.Sprite(spriteMaterial)
-            sprite.position.x = 100 * (Math.random() - 0.5);
-            sprite.position.y = 100 * Math.random() - 40;
-            sprite.position.z = 100 * (Math.random() - 0.5);
+            sprite.scale.set(0.1, 2.0, 0.1)
+            sprite.position.x = 15 * (Math.random() - 0.5);
+            sprite.position.y = 50 * Math.random();
+            sprite.position.z = 15 * (Math.random() - 0.5);
             this.sprites.push(sprite)
             scene.add(sprite)
         }
 
         // 地面を作成
-        const plane = new THREE.GridHelper(300, 10, 0x888888, 0x888888);
-        plane.position.y = -40;
-        scene.add(plane);
+        const plane = new THREE.Mesh(
+            new THREE.PlaneGeometry(50, 50, 1, 1),
+            // new THREE.MeshLambertMaterial({color: 0xFFFFFF})
+            new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.0 })
+        )
+        plane.rotation.x = -(90 * Math.PI) / 180
+        plane.receiveShadow = true
+
+        // const plane = new THREE.GridHelper(300, 10, 0x888888, 0x888888);
+        // plane.position.y = -40;
+        plane.position.y = 0
+        scene.add(plane)
+
+
+        // knot
+        // const meshKnot = new THREE.Mesh(
+        //   new THREE.TorusKnotGeometry(3, 1, 100, 16),
+        //   new THREE.MeshStandardMaterial({ color: 0xaa0000, roughness: 0.0 })
+        // );
+        // meshKnot.position.set(0, 5, 0);
+        // // 影を落とす
+        // meshKnot.castShadow = true;
+        // scene.add(meshKnot);
 
 
         // 箱を作成
@@ -140,14 +174,14 @@ export default {
 // console.log('a')
             if (box) {
                 box.rotation.y += 0.01;
-                box.position.set(0, 0, 0)
+                box.position.set(0, 0.01, 0)
 
             }
 
             this.sprites.forEach((s) => {
-                s.position.y -= 0.1
-                if (s.position.y < -10.0) {
-                    s.position.y += 100.0
+                s.position.y -= 0.2
+                if (s.position.y < -4.0) {
+                    s.position.y += 50.0
                 }
             })
 
@@ -175,10 +209,7 @@ export default {
 
                 }
             }).observe(this.$refs.bg)
-
-
         })
-
 
     },
     data() {
