@@ -41,7 +41,7 @@ export default {
             // レンダラーを作成
             const renderer = new THREE.WebGLRenderer({
                 canvas: this.$refs.testCanvas,
-                antialias: true,
+                // antialias: true,
             });
             renderer.shadowMap.enabled = true
             renderer.setPixelRatio(window.devicePixelRatio)
@@ -52,7 +52,7 @@ export default {
 
         createCamera(width, height) {
             const camera = new THREE.PerspectiveCamera(45, width / height, 0.01, 100);
-            camera.position.set(0, 4.8, 10.0);
+            camera.position.set(4, 14.8 / 2, 40.0 / 2);
             camera.lookAt(new THREE.Vector3(0, 1, 0));
             // camera.lookAt(0, 0, 0)
             return camera
@@ -71,9 +71,9 @@ export default {
 
         // シーンを作成
         const scene = new THREE.Scene();
-        // scene.fog = new THREE.Fog(0x000000, 8, 22);
+        scene.fog = new THREE.Fog(0x000000, 5, 40);
 
-        const light = new THREE.AmbientLight(0xFFFFFF, 0.3);
+        const light = new THREE.AmbientLight(0xFFFFFF, 0.8);
         scene.add(light);
 
         // const directionalLight = new THREE.DirectionalLight(0xffffff);
@@ -111,40 +111,55 @@ export default {
         });
 
 
-        for (let i = 0; i < 1000; i++) {
-            const spriteMaterial = new THREE.SpriteMaterial({
-                map: new THREE.TextureLoader().load('light.png'),
-                opacity: 0.7,
-                color: 0xffffff,
-                fog: true,
-                transparent: true,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false, // デプスバッファへの書き込み可否
-            })
 
-            const sprite = new THREE.Sprite(spriteMaterial)
-            sprite.scale.set(0.1, 2.0, 0.1)
-            sprite.position.x = 15 * (Math.random() - 0.5);
-            sprite.position.y = 50 * Math.random();
-            sprite.position.z = 15 * (Math.random() - 0.5);
-            this.sprites.push(sprite)
-            scene.add(sprite)
-        }
 
         // 地面を作成
-        const plane = new THREE.Mesh(
-            new THREE.PlaneGeometry(50, 50, 1, 1),
-            // new THREE.MeshLambertMaterial({color: 0xFFFFFF})
-            new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.0 })
-        )
-        plane.rotation.x = -(90 * Math.PI) / 180
-        plane.receiveShadow = true
+        // const plane = new THREE.Mesh(
+        //     new THREE.PlaneGeometry(50, 50, 1, 1),
+        //     // new THREE.MeshLambertMaterial({color: 0xFFFFFF})
+        //     new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.0 })
+        // )
+        // plane.rotation.x = -(90 * Math.PI) / 180
+        // plane.receiveShadow = true
+        // plane.position.y = 0
+        // scene.add(plane)
+
+        const gr = []
+        for (let y = 0; y < 40; y++) {
+            const line = []
+            for (let x = 0; x < 40; x++) {
+                // 地面を作成
+                const planeMaterial = new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.5 })
+                const plane = new THREE.Mesh(
+                    new THREE.PlaneGeometry(1.0, 1.0, 1, 1),
+                    planeMaterial
+
+                )
+
+                let c = Math.random()
+                planeMaterial.color.r = 0
+                planeMaterial.color.g = c
+                planeMaterial.color.b = c
+
+
+                plane.rotation.x = -(90 * Math.PI) / 180
+                plane.position.set(x - 20, 0, y - 20)
+                plane.receiveShadow = true
+
+                plane.position.y = 0
+                scene.add(plane)
+console.log(plane.material.color)
+                line.push({
+                    plane,
+                })
+
+            }
+            gr.push(line)
+        }
+
 
         // const plane = new THREE.GridHelper(300, 10, 0x888888, 0x888888);
         // plane.position.y = -40;
-        plane.position.y = 0
-        scene.add(plane)
-
 
         // knot
         // const meshKnot = new THREE.Mesh(
@@ -168,6 +183,27 @@ export default {
         // scene.add(box);
 
 
+        const t = new THREE.TextureLoader().load('light.png')
+        for (let i = 0; i < 700; i++) {
+            const spriteMaterial = new THREE.SpriteMaterial({
+                map: t,
+                opacity: 0.7,
+                color: 0xffffff,
+                fog: true,
+                transparent: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false, // デプスバッファへの書き込み可否
+            })
+
+
+            const sprite = new THREE.Sprite(spriteMaterial)
+            sprite.scale.set(2, 10.0, 2)
+            sprite.position.x = 40 * (Math.random() - 0.5);
+            sprite.position.y = 50 * Math.random();
+            sprite.position.z = 40 * (Math.random() - 0.5);
+            this.sprites.push(sprite)
+            scene.add(sprite)
+        }
 
         // 毎フレーム時に実行されるループイベントです
         const tick = () => {
@@ -183,6 +219,20 @@ export default {
                 if (s.position.y < -4.0) {
                     s.position.y += 50.0
                 }
+            })
+
+            gr.forEach((line) => {
+                line.forEach((g) => {
+                    let c = g.plane.material.color.g
+                    c += 0.001
+                    if (c > 1.0) {
+                        c = 0.5
+                    }
+
+                    g.plane.material.color.r = 0
+                    g.plane.material.color.g = c
+                    g.plane.material.color.b = c
+                })
             })
 
             this.renderer.render(scene, this.camera); // レンダリング
