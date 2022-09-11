@@ -52,7 +52,7 @@ export default {
 
         createCamera(width, height) {
             const camera = new THREE.PerspectiveCamera(45, width / height, 0.01, 100);
-            camera.position.set(4, 14.8 / 2, 40.0 / 2);
+            camera.position.set(4, 17.0, 40.0);
             camera.lookAt(new THREE.Vector3(0, 1, 0));
             // camera.lookAt(0, 0, 0)
             return camera
@@ -71,23 +71,22 @@ export default {
 
         // シーンを作成
         const scene = new THREE.Scene();
-        scene.fog = new THREE.Fog(0x000000, 5, 40);
+        scene.fog = new THREE.Fog(0xafafaf, 15, 150);
 
-        const light = new THREE.AmbientLight(0xFFFFFF, 0.8);
+        const light = new THREE.AmbientLight(0xFFFFFF, 0.2);
         scene.add(light);
 
-        // const directionalLight = new THREE.DirectionalLight(0xffffff);
-        // directionalLight.position.set(1, 2.0, 1);
-        // scene.add(directionalLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
+        directionalLight.position.set(20, 12.0, 20);
+        scene.add(directionalLight);
 
         // new THREE.SpotLight(色, 光の強さ, 距離, 照射角, ボケ具合, 減衰率)
         // const slight = new THREE.SpotLight(0xFFFFFF, 1, 1200, Math.PI / 4, 1);
-        const spotLight = new THREE.SpotLight(0xffffff, 0.8, 200, Math.PI / 4, 1);
+        const spotLight = new THREE.SpotLight(0xffffff, 0.4, 200, Math.PI / 4, 0.3);
         spotLight.position.set(1, 7, 3)
         spotLight.castShadow = true
-        spotLight.shadow.mapSize.width = 1024;
-        spotLight.shadow.mapSize.height = 1024;
-
+        spotLight.shadow.mapSize.width = 1024
+        spotLight.shadow.mapSize.height = 1024
         scene.add(spotLight);
 
         // カメラを作成
@@ -99,18 +98,79 @@ export default {
         // const modelLoader = new ColladaLoader()
         const modelLoader = new GLTFLoader()
 
-        let box = null
-        modelLoader.load('box.glb', (glb) => {
-            // 読み込み後に3D空間に追加_
+        let sky = null
+        modelLoader.load('sky.glb', (glb) => {
+            sky = glb.scene
+            // sky.children.forEach((c) => {
+            //     c.material.fog = false
+            // })
+// console.log('sky', sky)
+            sky.scale.set(6, 6, 6)
+            sky.position.set(0, -10, 0)
+            scene.add(sky)
+        })
+
+        const kasaList = []
+        modelLoader.load('kasa.glb', (glb) => {
+            const kasa = glb.scene
+
+            const t = new THREE.TextureLoader().load('hito.png')
+        // for (let i = 0; i < 1200; i++) {
+            const hitoMaterial = new THREE.SpriteMaterial({
+                map: t,
+                opacity: 1.0,
+                color: 0xffffff,
+                fog: true,
+                transparent: true,
+                // blending: THREE.AdditiveBlending,
+                depthWrite: false, // デプスバッファへの書き込み可否
+            })
+
+
+            for (let i = 0; i < 10; i++) {
+                const k = kasa.clone()
+                k.scale.set(0.6, 0.6, 0.6)
+                const kx = Math.random() * 20
+                const ky = Math.random() * 20
+                kasa.position.set(kx, 1, ky)
+                scene.add(k)
+                kasaList.push(k)
+
+                const hitoSprite = new THREE.Sprite(hitoMaterial)
+                hitoSprite.scale.set(1, 1, 1)
+                hitoSprite.position.set(kx + 0.2, 1.1, ky)
+                scene.add(hitoSprite)
+            }
+
+            kasa.position.set(0, 1.1, 0)
+            kasa.scale.set(0.6, 0.6, 0.6)
+            scene.add(kasa)
+            kasaList.push(kasa)
+
+
+
+        })
+
+        const panelCount = 50
+
+        const boxList = []
+        modelLoader.load('building.glb', (glb) => {
             const model = glb.scene
             model.children[0].castShadow = true
-            // model.position.y = 10
-// console.log(model)
-            scene.add(model)
-            box = model
+            const boxRect = panelCount - 15
+            for (let y = 0; y < boxRect; y++) {
+                for (let x = 0; x < boxRect; x++) {
+                    if (Math.random() < 0.2) {
+                        const high = Math.random() * 2 + 1
+                        let box = model.clone()
+                        box.scale.set(1, high, 1)
+                        box.position.set(x * 2 - boxRect, 0, y * 2 - boxRect)
+                        scene.add(box)
+                        boxList.push(box)
+                    }
+                }
+            }
         });
-
-
 
 
         // 地面を作成
@@ -125,37 +185,46 @@ export default {
         // scene.add(plane)
 
         const gr = []
-        for (let y = 0; y < 40; y++) {
-            const line = []
-            for (let x = 0; x < 40; x++) {
-                // 地面を作成
-                const planeMaterial = new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.5 })
-                const plane = new THREE.Mesh(
-                    new THREE.PlaneGeometry(1.0, 1.0, 1, 1),
-                    planeMaterial
 
-                )
+        const planeMaterial = new THREE.MeshStandardMaterial({ color: 0xafafaf, roughness: 0.5 })
+        const plane = new THREE.Mesh(
+            new THREE.PlaneGeometry(panelCount * 2.0, panelCount * 2.0, 10, 10),
+            planeMaterial
+        )
+        plane.receiveShadow = true
+        // plane.position.x = -(panelCount )
+        plane.position.y = 0
+        // plane.position.z = -(panelCount )
+        plane.rotation.x = -(90 * Math.PI) / 180
+        scene.add(plane)
 
-                let c = Math.random()
-                planeMaterial.color.r = 0
-                planeMaterial.color.g = c
-                planeMaterial.color.b = c
+        // for (let y = 0; y < panelCount; y++) {
+        //     const line = []
+        //     for (let x = 0; x < panelCount; x++) {
+        //         const planeMaterial = new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.5 })
+        //         const plane = new THREE.Mesh(
+        //             new THREE.PlaneGeometry(2.0, 2.0, 1, 1),
+        //             planeMaterial
+        //         )
 
+        //         let c = Math.random()
+        //         planeMaterial.color.r = 0.8
+        //         planeMaterial.color.g = 0.8
+        //         planeMaterial.color.b = 0.8
 
-                plane.rotation.x = -(90 * Math.PI) / 180
-                plane.position.set(x - 20, 0, y - 20)
-                plane.receiveShadow = true
+        //         plane.rotation.x = -(90 * Math.PI) / 180
+        //         plane.position.set((x - (panelCount / 2)) * 2, 0, (y  - (panelCount / 2)) * 2)
+        //         plane.receiveShadow = true
 
-                plane.position.y = 0
-                scene.add(plane)
-console.log(plane.material.color)
-                line.push({
-                    plane,
-                })
+        //         plane.position.y = 0
+        //         scene.add(plane)
+        //         line.push({
+        //             plane,
+        //         })
 
-            }
-            gr.push(line)
-        }
+        //     }
+        //     gr.push(line)
+        // }
 
 
         // const plane = new THREE.GridHelper(300, 10, 0x888888, 0x888888);
@@ -184,10 +253,10 @@ console.log(plane.material.color)
 
 
         const t = new THREE.TextureLoader().load('light.png')
-        for (let i = 0; i < 700; i++) {
+        for (let i = 0; i < 1200; i++) {
             const spriteMaterial = new THREE.SpriteMaterial({
                 map: t,
-                opacity: 0.7,
+                opacity: 0.3,
                 color: 0xffffff,
                 fog: true,
                 transparent: true,
@@ -198,21 +267,27 @@ console.log(plane.material.color)
 
             const sprite = new THREE.Sprite(spriteMaterial)
             sprite.scale.set(2, 10.0, 2)
-            sprite.position.x = 40 * (Math.random() - 0.5);
+            sprite.position.x = 80 * (Math.random() - 0.5);
             sprite.position.y = 50 * Math.random();
-            sprite.position.z = 40 * (Math.random() - 0.5);
+            sprite.position.z = 80 * (Math.random() - 0.5);
             this.sprites.push(sprite)
             scene.add(sprite)
         }
 
         // 毎フレーム時に実行されるループイベントです
         const tick = () => {
-// console.log('a')
-            if (box) {
-                box.rotation.y += 0.01;
-                box.position.set(0, 0.01, 0)
+            this.crot += 0.05
+            const rad = (this.crot * Math.PI) / 180;
+            this.camera.position.x = 40.0 * Math.sin(rad)
+            this.camera.position.z = 40.0 * Math.cos(rad)
+            this.camera.lookAt(new THREE.Vector3(0, 1, 0));
 
-            }
+            // boxList.forEach((box) => {
+            //     if (box) {
+            //         box.rotation.y += 0.01;
+            //     }
+            // })
+
 
             this.sprites.forEach((s) => {
                 s.position.y -= 0.2
@@ -221,24 +296,26 @@ console.log(plane.material.color)
                 }
             })
 
-            gr.forEach((line) => {
-                line.forEach((g) => {
-                    let c = g.plane.material.color.g
-                    c += 0.001
-                    if (c > 1.0) {
-                        c = 0.5
-                    }
+            // gr.forEach((line) => {
+            //     line.forEach((g) => {
+            //         let c = g.plane.material.color.g
+            //         c += 0.001
+            //         if (c > 0.74) {
+            //             c = 0.7
+            //         }
 
-                    g.plane.material.color.r = 0
-                    g.plane.material.color.g = c
-                    g.plane.material.color.b = c
-                })
-            })
+            //         g.plane.material.color.r = 0.7
+            //         g.plane.material.color.g = c
+            //         g.plane.material.color.b = 0.7
+            //     })
+            // })
 
             this.renderer.render(scene, this.camera); // レンダリング
 
 
-            requestAnimationFrame(tick);
+            window.setTimeout(() => {
+                requestAnimationFrame(tick);
+            }, 0)
         }
 
         tick();
@@ -271,6 +348,7 @@ console.log(plane.material.color)
         return {
             renderer: null,
             camera: null,
+            crot: 0,
             sprites: [],
         }
     },
