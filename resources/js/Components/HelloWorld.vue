@@ -179,7 +179,7 @@ export default {
         let oldStep = 0
         this.frameCount = 0
         const tick = (step) => {
-console.log('tick step:', step - oldStep)
+// console.log('tick step:', step - oldStep)
             oldStep = step
 
             // this.frameCount++
@@ -198,6 +198,8 @@ console.log('tick step:', step - oldStep)
 
 
             this.rain.update(THREE)
+            // this.grand.update(THREE)
+            // this.hero.update(THREE)
 
             // boxList.forEach((box) => {
             //     if (box) {
