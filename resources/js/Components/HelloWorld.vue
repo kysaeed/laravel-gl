@@ -22,6 +22,9 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 // import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader'
 
+import Grand from './Grand.js'
+import Rain from './Rain.js'
+
 export default {
     name: 'hello-world',
     props: {
@@ -43,7 +46,7 @@ export default {
                 canvas: this.$refs.testCanvas,
                 // antialias: true,
             });
-            renderer.shadowMap.enabled = true
+            // renderer.shadowMap.enabled = true
             renderer.setPixelRatio(window.devicePixelRatio)
             renderer.setSize(width, height);
 
@@ -52,13 +55,19 @@ export default {
 
         createCamera(width, height) {
             const camera = new THREE.PerspectiveCamera(45, width / height, 0.01, 100);
-            camera.position.set(4, 17.0, 40.0);
+            camera.position.set(4, 11.0, 40.0);
             camera.lookAt(new THREE.Vector3(0, 1, 0));
             // camera.lookAt(0, 0, 0)
             return camera
         },
     },
 
+    created() {
+        this.renderer = null
+        this.camera = null
+        this.crot = 0
+        this.frameCount = 0
+    },
     mounted() {
         const r = this.$refs.bg.getBoundingClientRect()
         // console.log(r)
@@ -80,11 +89,11 @@ export default {
         directionalLight.position.set(20, 12.0, 20);
         scene.add(directionalLight);
 
-        // new THREE.SpotLight(色, 光の強さ, 距離, 照射角, ボケ具合, 減衰率)
+        // //// new THREE.SpotLight(色, 光の強さ, 距離, 照射角, ボケ具合, 減衰率)
         // const slight = new THREE.SpotLight(0xFFFFFF, 1, 1200, Math.PI / 4, 1);
         const spotLight = new THREE.SpotLight(0xffffff, 0.4, 200, Math.PI / 4, 0.3);
         spotLight.position.set(1, 7, 3)
-        spotLight.castShadow = true
+        // spotLight.castShadow = true
         spotLight.shadow.mapSize.width = 1024
         spotLight.shadow.mapSize.height = 1024
         scene.add(spotLight);
@@ -106,7 +115,7 @@ export default {
             // })
 // console.log('sky', sky)
             sky.scale.set(6, 6, 6)
-            sky.position.set(0, -10, 0)
+            sky.position.set(0, -9, 0)
             scene.add(sky)
         })
 
@@ -115,7 +124,6 @@ export default {
             const kasa = glb.scene
 
             const t = new THREE.TextureLoader().load('hito.png')
-        // for (let i = 0; i < 1200; i++) {
             const hitoMaterial = new THREE.SpriteMaterial({
                 map: t,
                 opacity: 1.0,
@@ -156,7 +164,7 @@ export default {
         const boxList = []
         modelLoader.load('building.glb', (glb) => {
             const model = glb.scene
-            model.children[0].castShadow = true
+            // model.children[0].castShadow = true
             const boxRect = panelCount - 15
             for (let y = 0; y < boxRect; y++) {
                 for (let x = 0; x < boxRect; x++) {
@@ -172,59 +180,11 @@ export default {
             }
         });
 
-
         // 地面を作成
-        // const plane = new THREE.Mesh(
-        //     new THREE.PlaneGeometry(50, 50, 1, 1),
-        //     // new THREE.MeshLambertMaterial({color: 0xFFFFFF})
-        //     new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.0 })
-        // )
-        // plane.rotation.x = -(90 * Math.PI) / 180
-        // plane.receiveShadow = true
-        // plane.position.y = 0
-        // scene.add(plane)
+        const grand = new Grand(THREE, scene)
 
-        const gr = []
-
-        const planeMaterial = new THREE.MeshStandardMaterial({ color: 0xafafaf, roughness: 0.5 })
-        const plane = new THREE.Mesh(
-            new THREE.PlaneGeometry(panelCount * 2.0, panelCount * 2.0, 10, 10),
-            planeMaterial
-        )
-        plane.receiveShadow = true
-        // plane.position.x = -(panelCount )
-        plane.position.y = 0
-        // plane.position.z = -(panelCount )
-        plane.rotation.x = -(90 * Math.PI) / 180
-        scene.add(plane)
-
-        // for (let y = 0; y < panelCount; y++) {
-        //     const line = []
-        //     for (let x = 0; x < panelCount; x++) {
-        //         const planeMaterial = new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.5 })
-        //         const plane = new THREE.Mesh(
-        //             new THREE.PlaneGeometry(2.0, 2.0, 1, 1),
-        //             planeMaterial
-        //         )
-
-        //         let c = Math.random()
-        //         planeMaterial.color.r = 0.8
-        //         planeMaterial.color.g = 0.8
-        //         planeMaterial.color.b = 0.8
-
-        //         plane.rotation.x = -(90 * Math.PI) / 180
-        //         plane.position.set((x - (panelCount / 2)) * 2, 0, (y  - (panelCount / 2)) * 2)
-        //         plane.receiveShadow = true
-
-        //         plane.position.y = 0
-        //         scene.add(plane)
-        //         line.push({
-        //             plane,
-        //         })
-
-        //     }
-        //     gr.push(line)
-        // }
+        // 雨
+        this.rain = new Rain(THREE, scene)
 
 
         // const plane = new THREE.GridHelper(300, 10, 0x888888, 0x888888);
@@ -252,35 +212,30 @@ export default {
         // scene.add(box);
 
 
-        const t = new THREE.TextureLoader().load('light.png')
-        for (let i = 0; i < 1200; i++) {
-            const spriteMaterial = new THREE.SpriteMaterial({
-                map: t,
-                opacity: 0.3,
-                color: 0xffffff,
-                fog: true,
-                transparent: true,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false, // デプスバッファへの書き込み可否
-            })
-
-
-            const sprite = new THREE.Sprite(spriteMaterial)
-            sprite.scale.set(2, 10.0, 2)
-            sprite.position.x = 80 * (Math.random() - 0.5);
-            sprite.position.y = 50 * Math.random();
-            sprite.position.z = 80 * (Math.random() - 0.5);
-            this.sprites.push(sprite)
-            scene.add(sprite)
-        }
 
         // 毎フレーム時に実行されるループイベントです
-        const tick = () => {
-            this.crot += 0.05
+        let oldStep = 0
+        this.frameCount = 0
+        const tick = (step) => {
+// console.log('tick step:', step - oldStep)
+            oldStep = step
+
+            // this.frameCount++
+            // if (this.frameCount % 2) {
+            //     this.$nextTick(() => {
+            //         requestAnimationFrame(tick);
+            //     })
+            //     return
+            // }
+
+            this.crot += 0.02
             const rad = (this.crot * Math.PI) / 180;
             this.camera.position.x = 40.0 * Math.sin(rad)
             this.camera.position.z = 40.0 * Math.cos(rad)
             this.camera.lookAt(new THREE.Vector3(0, 1, 0));
+
+
+            this.rain.update(THREE)
 
             // boxList.forEach((box) => {
             //     if (box) {
@@ -289,33 +244,10 @@ export default {
             // })
 
 
-            this.sprites.forEach((s) => {
-                s.position.y -= 0.2
-                if (s.position.y < -4.0) {
-                    s.position.y += 50.0
-                }
-            })
-
-            // gr.forEach((line) => {
-            //     line.forEach((g) => {
-            //         let c = g.plane.material.color.g
-            //         c += 0.001
-            //         if (c > 0.74) {
-            //             c = 0.7
-            //         }
-
-            //         g.plane.material.color.r = 0.7
-            //         g.plane.material.color.g = c
-            //         g.plane.material.color.b = 0.7
-            //     })
-            // })
-
             this.renderer.render(scene, this.camera); // レンダリング
 
 
-            window.setTimeout(() => {
-                requestAnimationFrame(tick);
-            }, 0)
+            requestAnimationFrame(tick);
         }
 
         tick();
@@ -340,17 +272,7 @@ export default {
 
     },
     data() {
-        // const scene = new THREE.Scene()
-        // const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true })
-        // const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000)
-        // const ambientlight = new THREE.AmbientLight(0xFFFFFF, 0.5)
-
-        return {
-            renderer: null,
-            camera: null,
-            crot: 0,
-            sprites: [],
-        }
+        return {}
     },
 }
 </script>
