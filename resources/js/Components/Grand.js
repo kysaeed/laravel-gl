@@ -15,7 +15,7 @@ class Grand {
         scene.add(plane)
         */
 
-        const panelCount = 50;
+        const panelCount = 50
 
         const gr = []
         // /*

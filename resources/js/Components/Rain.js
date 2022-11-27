@@ -1,19 +1,22 @@
 class Rain {
     constructor(THREE, scene) {
+
+        const RainCount = 1200
+
         this.sprites = []
 
         const t = new THREE.TextureLoader().load('light.png')
-        for (let i = 0; i < 1200; i++) {
-            const spriteMaterial = new THREE.SpriteMaterial({
-                map: t,
-                opacity: 0.3,
-                color: 0xffffff,
-                fog: true,
-                transparent: true,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false, // デプスバッファへの書き込み可否
-            })
 
+    const spriteMaterial = new THREE.SpriteMaterial({
+        map: t,
+        opacity: 0.3,
+        color: 0xffffff,
+        fog: true,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false, // デプスバッファへの書き込み可否
+    })
+    for (let i = 0; i < RainCount; i++) {
             const sprite = new THREE.Sprite(spriteMaterial)
             sprite.scale.set(2, 10.0, 2)
             sprite.position.x = 80 * (Math.random() - 0.5);

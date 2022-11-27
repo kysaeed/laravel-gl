@@ -24,6 +24,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 
 import Grand from './Grand.js'
 import Rain from './Rain.js'
+import Hero from './Hero.js'
 
 export default {
     name: 'hello-world',
@@ -90,7 +91,6 @@ export default {
         scene.add(directionalLight);
 
         // //// new THREE.SpotLight(色, 光の強さ, 距離, 照射角, ボケ具合, 減衰率)
-        // const slight = new THREE.SpotLight(0xFFFFFF, 1, 1200, Math.PI / 4, 1);
         const spotLight = new THREE.SpotLight(0xffffff, 0.4, 200, Math.PI / 4, 0.3);
         spotLight.position.set(1, 7, 3)
         // spotLight.castShadow = true
@@ -117,46 +117,6 @@ export default {
             sky.scale.set(6, 6, 6)
             sky.position.set(0, -9, 0)
             scene.add(sky)
-        })
-
-        const kasaList = []
-        modelLoader.load('kasa.glb', (glb) => {
-            const kasa = glb.scene
-
-            const t = new THREE.TextureLoader().load('hito.png')
-            const hitoMaterial = new THREE.SpriteMaterial({
-                map: t,
-                opacity: 1.0,
-                color: 0xffffff,
-                fog: true,
-                transparent: true,
-                // blending: THREE.AdditiveBlending,
-                depthWrite: false, // デプスバッファへの書き込み可否
-            })
-
-
-            for (let i = 0; i < 10; i++) {
-                const k = kasa.clone()
-                k.scale.set(0.6, 0.6, 0.6)
-                const kx = Math.random() * 20
-                const ky = Math.random() * 20
-                kasa.position.set(kx, 1, ky)
-                scene.add(k)
-                kasaList.push(k)
-
-                const hitoSprite = new THREE.Sprite(hitoMaterial)
-                hitoSprite.scale.set(1, 1, 1)
-                hitoSprite.position.set(kx + 0.2, 1.1, ky)
-                scene.add(hitoSprite)
-            }
-
-            kasa.position.set(0, 1.1, 0)
-            kasa.scale.set(0.6, 0.6, 0.6)
-            scene.add(kasa)
-            kasaList.push(kasa)
-
-
-
         })
 
         const panelCount = 50
@@ -186,6 +146,9 @@ export default {
         // 雨
         this.rain = new Rain(THREE, scene)
 
+        // 人
+        this.hero = new Hero(THREE, scene, modelLoader)
+
 
         // const plane = new THREE.GridHelper(300, 10, 0x888888, 0x888888);
         // plane.position.y = -40;
@@ -212,12 +175,11 @@ export default {
         // scene.add(box);
 
 
-
         // 毎フレーム時に実行されるループイベントです
         let oldStep = 0
         this.frameCount = 0
         const tick = (step) => {
-// console.log('tick step:', step - oldStep)
+console.log('tick step:', step - oldStep)
             oldStep = step
 
             // this.frameCount++
